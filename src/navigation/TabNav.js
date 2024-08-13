@@ -32,7 +32,7 @@ const TabNav = () => {
         name="RideScreen"
         component={RideScreen}
         options={{
-          tabBarLabel: 'Activity',
+          tabBarLabel: 'Ride',
           tabBarLabelStyle: { color: '#008E97' },
           headerShown: false,
           tabBarIcon: ({ focused }) =>

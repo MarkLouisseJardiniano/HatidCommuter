@@ -58,6 +58,8 @@ const Home = ({ navigation, route,  onSelectVehicle }) => {
     showVehicleOptions: false,
   });
 
+
+  
   const {
     curLoc,
     time,
@@ -77,8 +79,6 @@ const Home = ({ navigation, route,  onSelectVehicle }) => {
       onSelectVehicle(vehicle);
     }
   };
-  
-
 
   useEffect(() => {
     getLiveLocation();
@@ -404,34 +404,34 @@ const Home = ({ navigation, route,  onSelectVehicle }) => {
           </View>
         )}
 
-        {bookingDetails?.driver && bookingDetails?.driver?.vehicleInfo2 && bookingDetails.status === "accepted" && (
-          <View style={styles.acceptedContainer}>
-          <View style={styles.acceptedHeader}>
-            <Text style={styles.acceptedText}>
-              The driver is on the way to pick you up      <Text>Time left: {time.toFixed(0)} </Text>
-            </Text>
-            </View>
-            <View style={styles.circle}/>
-            <Text style={{fontWeight: '700'}}>{bookingDetails.driver.name}</Text>
-                     <Text style={{fontWeight: '700'}}>{bookingDetails.driver.vehicleInfo2.plateNumber}</Text>
-            <Text style={{fontWeight: '700'}}>Total Fare: ${totalFare.toFixed(2)}</Text>
-            <Text>
-              Pick up:
-            </Text>
-            <Text>{bookingDetails.pickupLocation.latitude},{" "}
-            {bookingDetails.pickupLocation.longitude}</Text>
-            <Text>
-              Destination:
-            </Text>
-            <Text> {bookingDetails.destinationLocation.latitude},{" "}
-            {bookingDetails.destinationLocation.longitude}</Text>
-            <TouchableOpacity>
-              <Text style={styles.cancelButton}>Cancel Booking</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        {bookingDetails?.driver && bookingDetails.status === "accepted" && (
+  <View style={styles.acceptedContainer}>
+    <View style={styles.acceptedHeader}>
+      <Text style={styles.acceptedText}>
+        The driver is on the way to pick you up <Text>Time left: {time.toFixed(0)}</Text>
+      </Text>
+    </View>
+    <View style={styles.circle}/>
+    <Text style={{ fontWeight: '700' }}>{bookingDetails.driver.name}</Text>
+    {bookingDetails.driver.vehicleInfo2 && (
+      <Text style={{ fontWeight: '700' }}>
+        Plate Number: {bookingDetails.driver.vehicleInfo2.plateNumber || 'Not Available'}
+      </Text>
+    )}
+    <Text style={{ fontWeight: '700' }}>Total Fare: ₱{totalFare.toFixed(2)}</Text>
+    <Text>Pick up:</Text>
+    <Text>{bookingDetails.pickupLocation.latitude}, {bookingDetails.pickupLocation.longitude}</Text>
+    <Text>Destination:</Text>
+    <Text>{bookingDetails.destinationLocation.latitude}, {bookingDetails.destinationLocation.longitude}</Text>
+    <TouchableOpacity>
+      <Text style={styles.cancelButton}>Cancel Booking</Text>
+    </TouchableOpacity>
+  </View>
+)}
 
-        {bookingDetails?.status === "completed" &&  bookingDetails?.driver?.vehicleInfo2 && (
+
+
+        {bookingDetails?.status === "completed" &&  bookingDetails?.driver && (
           <View style={styles.completedContainer}>
             <Text style={{fontWeight: '700', fontSize: 24}}>Payment Summary</Text>
 
@@ -439,8 +439,12 @@ const Home = ({ navigation, route,  onSelectVehicle }) => {
             <View style={styles.circle}/>
             <View style={styles.driverInfo}>
             <Text>Driver: {bookingDetails.driver.name}</Text>
-            <Text>Plate Number: {bookingDetails.driver.vehicleInfo2.plateNumber}</Text>
             <Text>Vehicle: {bookingDetails.vehicleType}</Text>
+            {bookingDetails.driver.vehicleInfo2 && (
+      <Text style={{ fontWeight: '700' }}>
+        Plate Number: {bookingDetails.driver.vehicleInfo2.plateNumber || 'Not Available'}
+      </Text>
+    )}
             </View>
             </View>
             <Text>Date: {moment(bookingDetails.createdAt).format('MMMM DD, YYYY')}</Text>

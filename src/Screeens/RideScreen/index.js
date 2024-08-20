@@ -2,17 +2,19 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Image,
   Platform,
+  Alert
 } from "react-native";
 import MapView, { Marker, AnimatedRegion } from "react-native-maps";
 import { GOOGLE_MAP_KEY } from "../../constants/googleMapKey";
 import imagePath from "../../constants/imagePath";
 import MapViewDirections from "react-native-maps-directions";
 import Loader from "../../components/Loader";
+import { Image } from 'expo-image';
 import {
   requestForegroundPermissionsAsync,
   getCurrentPositionAsync,
@@ -22,6 +24,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import moment from 'moment';
 import RNPickerSelect from 'react-native-picker-select';
+import { useNavigation } from '@react-navigation/native';
+import { CommonActions } from '@react-navigation/native';
+
+
 
 const screen = Dimensions.get("window");
 const ASPECT_RATIO = screen.width / screen.height;
@@ -35,13 +41,16 @@ const Home = ({ navigation, route,  onSelectVehicle }) => {
   const [bookingDetails, setBookingDetails] = useState(null);
   const [pollingInterval, setPollingInterval] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [showVehicleOptions, setShowVehicleOptions] = useState(true);
   const [fareDetails, setFareDetails] = useState(null);
   const [totalFare, setTotalFare] = useState(null);
   const [selectPaymentMethod, setSelectPaymentMethod] = useState(null);
+  const [rating, setRating] = useState(0);
+  const [feedback, setFeedback] = useState('');
 
   const [state, setState] = useState({
     curLoc: {
-      latitude: 13.3646, // Default to Marinduque latitude
+      latitude: 13.3646,
       longitude: 121.9136,
     },
     destinationCords: {},
@@ -55,7 +64,6 @@ const Home = ({ navigation, route,  onSelectVehicle }) => {
     time: 0,
     distance: 0,
     heading: 0,
-    showVehicleOptions: false,
   });
 
 
@@ -68,7 +76,6 @@ const Home = ({ navigation, route,  onSelectVehicle }) => {
     isLoading,
     coordinate,
     heading,
-    showVehicleOptions,
   } = state;
 
   const updateState = (data) => setState((state) => ({ ...state, ...data }));
@@ -121,7 +128,7 @@ const Home = ({ navigation, route,  onSelectVehicle }) => {
       });
     } catch (error) {
       updateState({
-        errorMessage: error.message, // Handle errors
+        errorMessage: error.message,
       });
     }
   };
@@ -175,7 +182,7 @@ const Home = ({ navigation, route,  onSelectVehicle }) => {
         return;
       }
 
-      // Fetch fare details
+      //fare details
       const fareResponse = await axios.get(
         "https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/admin-fare/fares",
         {
@@ -245,13 +252,55 @@ const Home = ({ navigation, route,  onSelectVehicle }) => {
       setTotalFare(totalFare); // Update totalFare
       setShowSearching(true);
 
-      // Start polling for updates
       startPolling(response.data._id, token);
     } catch (error) {
       console.error("Error creating booking:", error);
-      // Handle error scenario
     }
   };
+
+  const handleCancelBooking = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const userId = await AsyncStorage.getItem("userId");
+  
+      if (!token || !userId) {
+        console.error("No token or user ID found.");
+        return;
+      }
+  
+      const response = await axios.post(
+        `https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/ride/cancel`,
+        {
+          userId: userId,
+          bookingId: bookingDetails._id,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      if (response.status === 200) {
+        console.log("Booking canceled:", response.data);
+  
+        // Update state to cancel
+        setBookingDetails(null);
+        setFareDetails(null);
+        setTotalFare(null);
+        setShowSearching(false);
+  
+        alert("Your booking has been canceled.");
+      } else {
+        throw new Error("Failed to cancel booking");
+      }
+    } catch (error) {
+      console.error("Error canceling booking:", error);
+      alert("Failed to cancel the booking. Please try again.");
+    }
+  };
+  
 
   const startPolling = (bookingId, token) => {
     const intervalId = setInterval(async () => {
@@ -265,23 +314,121 @@ const Home = ({ navigation, route,  onSelectVehicle }) => {
             },
           }
         );
-        setBookingDetails(bookingResponse.data);
+  
+        const bookingDetails = bookingResponse.data; // Assuming the response data structure is correct
+  
+        // Update booking details state
+        setBookingDetails(bookingDetails);
+  
+        // Check if the booking status is "accepted"
+        if (bookingDetails.status === "completed") {
+          // Extract driverId from the driver object
+          const driver = bookingDetails.driver; // Change this line according to the actual response structure
+          const driverId = driver?._id; // Access the ID field
+  
+          if (driverId) {
+            console.log("Booking accepted:", bookingDetails);
+            console.log("Driver ID:", driverId);
+  
+            // Store driverId as a string in AsyncStorage
+            await AsyncStorage.setItem("driverId", driverId.toString());
+            console.log("Driver ID saved:", driverId);
+  
+            // Stop polling
+            clearInterval(intervalId);
+          } else {
+            console.log("Driver ID not found in booking details.");
+          }
+        }
       } catch (error) {
         console.error("Error fetching booking details:", error);
       }
-    }, 2000); // Poll every 5 seconds
-
+    }, 2000); // Poll every 2 seconds
+  
     setPollingInterval(intervalId);
   };
-
+  
   useEffect(() => {
-    // Clear polling interval on component unmount
     return () => {
       if (pollingInterval) {
         clearInterval(pollingInterval);
       }
     };
   }, [pollingInterval]);
+  
+  const handleMessage = () => {
+    navigation.navigate('MessageScreen');
+  };
+  
+  const handleRating = (index) => {
+    setRating(index + 1);
+  };
+  
+  const handleSubmit = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const userId = await AsyncStorage.getItem("userId");
+      const driverId = await AsyncStorage.getItem("driverId");
+
+      if (!token || !userId || !driverId) {
+        Alert.alert("Error", "Missing required information.");
+        return;
+      }
+
+      console.log("Submitting rating with:", {
+        bookingId: bookingDetails?._id,
+        driverId,
+        userId,
+        rating,
+        feedback
+      });
+
+      const response = await axios.post(
+        `https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/rate/ratings/${driverId}`,
+        {
+          bookingId: bookingDetails?._id,
+          userId,
+          rating,
+          feedback
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.status === 201) {
+        const data = response.data;
+
+        if (data.message === 'Rating Submitted Successfully') {
+          // Reset state
+          setRating(null);
+          setFeedback('');
+          setBookingDetails(null); // Reset booking details
+          setShowVehicleOptions(false);
+          setShowSearching(false);
+
+          // Clear AsyncStorage
+          await AsyncStorage.removeItem("token");
+          await AsyncStorage.removeItem("userId");
+          await AsyncStorage.removeItem("driverId");
+
+          // Navigate to the initial screen
+          navigation.navigate("Home"); // Replace 'InitialScreen' with your actual start screen name
+        } else {
+          Alert.alert("Info", data.message || "Rating submission completed.");
+        }
+      } else {
+        throw new Error("Unexpected response status: " + response.status);
+      }
+    } catch (error) {
+      console.error("Error submitting rating:", error.response ? error.response.data : error.message);
+      Alert.alert("Error", `There was an error submitting your rating: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
 
   return (
     <View style={styles.container}>
@@ -418,60 +565,74 @@ const Home = ({ navigation, route,  onSelectVehicle }) => {
         Plate Number: {bookingDetails.driver.vehicleInfo2.plateNumber || 'Not Available'}
       </Text>
     )}
+    <TouchableOpacity onPress={handleMessage}>
+    <Image
+        style={styles.image}
+        source={imagePath.message}
+      />
+    </TouchableOpacity>
+    <TouchableOpacity>
+    <Image
+        style={styles.image}
+        source={imagePath.call}
+      />
+    </TouchableOpacity>
+
     <Text style={{ fontWeight: '700' }}>Total Fare: ₱{totalFare.toFixed(2)}</Text>
     <Text>Pick up:</Text>
     <Text>{bookingDetails.pickupLocation.latitude}, {bookingDetails.pickupLocation.longitude}</Text>
     <Text>Destination:</Text>
     <Text>{bookingDetails.destinationLocation.latitude}, {bookingDetails.destinationLocation.longitude}</Text>
-    <TouchableOpacity>
+    <TouchableOpacity onPress={handleCancelBooking}>
       <Text style={styles.cancelButton}>Cancel Booking</Text>
     </TouchableOpacity>
   </View>
 )}
 
+{bookingDetails?.driver && bookingDetails?.status === "completed" && (
+  <View style={styles.completedContainer}>
+    <Text style={{ fontWeight: '700', fontSize: 24 }}>Payment Summary</Text>
 
+    <View style={styles.driverDetails}>
+      <View style={styles.circle} />
+      <View style={styles.driverInfo}>
+        <Text>Driver: {bookingDetails.driver.name}</Text>
+        <Text>Vehicle: {bookingDetails.vehicleType}</Text>
+        {bookingDetails.driver.vehicleInfo2 && (
+          <Text style={{ fontWeight: '700' }}>
+            Plate Number: {bookingDetails.driver.vehicleInfo2.plateNumber || 'Not Available'}
+          </Text>
+        )}
+      </View>
+    </View>
 
-        {bookingDetails?.status === "completed" &&  bookingDetails?.driver && (
-          <View style={styles.completedContainer}>
-            <Text style={{fontWeight: '700', fontSize: 24}}>Payment Summary</Text>
+    <Text>Date: {moment(bookingDetails.createdAt).format('MMMM DD, YYYY')}</Text>
 
-            <View style={styles.driverDetails}>
-            <View style={styles.circle}/>
-            <View style={styles.driverInfo}>
-            <Text>Driver: {bookingDetails.driver.name}</Text>
-            <Text>Vehicle: {bookingDetails.vehicleType}</Text>
-            {bookingDetails.driver.vehicleInfo2 && (
-      <Text style={{ fontWeight: '700' }}>
-        Plate Number: {bookingDetails.driver.vehicleInfo2.plateNumber || 'Not Available'}
-      </Text>
-    )}
-            </View>
-            </View>
-            <Text>Date: {moment(bookingDetails.createdAt).format('MMMM DD, YYYY')}</Text>
+    <View style={styles.location}>
+      <Text>Pick up:</Text>
+      <Text>{bookingDetails.pickupLocation.latitude}, {bookingDetails.pickupLocation.longitude}</Text>
+      <Text>Destination:</Text>
+      <Text>{bookingDetails.destinationLocation.latitude}, {bookingDetails.destinationLocation.longitude}</Text>
+    </View>
 
-            <View style={styles.location}>
-            <Text>
-              Pick up: 
-            </Text>
-            <Text>{bookingDetails.pickupLocation.latitude},{" "}
-            {bookingDetails.pickupLocation.longitude}</Text>
-            <Text>
-              Destination: 
-            </Text>
-            <Text>{bookingDetails.destinationLocation.latitude},{" "}
-            {bookingDetails.destinationLocation.longitude}</Text>
-            </View>
+    <View style={styles.fare}>
+      {fareDetails?.bookingFee && (
+        <Text>Booking Fee: ₱{fareDetails.bookingFee.toFixed(2)}</Text>
+      )}
+      {fareDetails?.farePerKm && distance && (
+        <Text>
+          Distance Fare: ₱{(fareDetails.farePerKm * distance).toFixed(2)}
+        </Text>
+      )}
+      {fareDetails?.baseFare && (
+        <Text>Base Fare: ₱{fareDetails.baseFare.toFixed(2)}</Text>
+      )}
+      {totalFare && (
+        <Text>Total Fare: ₱{totalFare.toFixed(2)}</Text>
+      )}
+    </View>
 
-            <View style={styles.fare}>
-            <Text>Distance: {distance.toFixed(2)} km</Text>
-            <Text>Booking Fee: ₱{fareDetails?.bookingFee.toFixed(2)}</Text>
-            <Text>
-              Distance Fare: ₱{(fareDetails?.farePerKm * distance).toFixed(2)}
-            </Text>
-            <Text>Base Fare: ₱{fareDetails?.baseFare.toFixed(2)}</Text>
-            <Text>Total Fare: ₱{totalFare.toFixed(2)}</Text>
-            </View>
-            <View style={styles.paymentContainer}>
+    {/* <View style={styles.paymentContainer}>
       <Text style={styles.label}>Select Payment Method:</Text>
       <RNPickerSelect
         onValueChange={(value) => setSelectPaymentMethod(value)}
@@ -481,14 +642,35 @@ const Home = ({ navigation, route,  onSelectVehicle }) => {
         ]}
         style={pickerSelectStyles}
       />
-    </View>
-            <Text>Rate Your Driver</Text>
-            <Text>Overall Experience</Text>
-            <TouchableOpacity style={styles.button}>
-              <Text>Submit</Text>
-            </TouchableOpacity>
+    </View> */}
+
+    <Text>Rate Your Driver</Text>
+    <Text>Overall Experience</Text>
+    <View style={styles.ratings}>
+            {Array.from({ length: 5 }, (_, index) => (
+              <TouchableOpacity key={index} onPress={() => handleRating(index)}>
+                <Image
+                  style={styles.image}
+                  source={index < rating ? imagePath.starFilled : imagePath.star}
+                />
+              </TouchableOpacity>
+            ))}
           </View>
-        )}
+
+          <TextInput
+            style={styles.textInput}
+            placeholder="Leave your feedback here..."
+            value={feedback}
+            onChangeText={setFeedback}
+          />
+
+<TouchableOpacity style={styles.button} onPress={handleSubmit}>
+            <Text style={styles.buttonText}>Submit</Text>
+          </TouchableOpacity>
+  </View>
+)}
+
+
       </View>
     </View>
   );
@@ -569,7 +751,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     backgroundColor: "gray",
-    borderRadius: 30, // Ensure the circle is properly rounded
+    borderRadius: 30, 
     justifyContent: "center",
     alignItems: "center",
   },
@@ -628,6 +810,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
   },
+  image: {
+    width: 30,
+    height: 30,
+  },
+  ratings: {
+    flexDirection: 'row'
+  }
 });
 
 const pickerSelectStyles = StyleSheet.create({

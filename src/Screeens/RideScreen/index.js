@@ -2,19 +2,25 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   TouchableOpacity,
   Dimensions,
+  Image,
   Platform,
+<<<<<<< HEAD
   Alert,
+=======
+>>>>>>> parent of eee38bf (add ratings and feddback)
 } from "react-native";
 import MapView, { Marker, AnimatedRegion } from "react-native-maps";
 import { GOOGLE_MAP_KEY } from "../../constants/googleMapKey";
 import imagePath from "../../constants/imagePath";
 import MapViewDirections from "react-native-maps-directions";
 import Loader from "../../components/Loader";
+<<<<<<< HEAD
 import { Image } from "expo-image";
+=======
+>>>>>>> parent of eee38bf (add ratings and feddback)
 import {
   requestForegroundPermissionsAsync,
   getCurrentPositionAsync,
@@ -22,10 +28,15 @@ import {
 } from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+<<<<<<< HEAD
 import moment from "moment";
 import RNPickerSelect from "react-native-picker-select";
 import { useNavigation } from "@react-navigation/native";
 import { CommonActions } from "@react-navigation/native";
+=======
+import moment from 'moment';
+import RNPickerSelect from 'react-native-picker-select';
+>>>>>>> parent of eee38bf (add ratings and feddback)
 
 const screen = Dimensions.get("window");
 const ASPECT_RATIO = screen.width / screen.height;
@@ -39,6 +50,7 @@ const Home = ({ navigation, route, onSelectVehicle }) => {
   const [bookingDetails, setBookingDetails] = useState(null);
   const [pollingInterval, setPollingInterval] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+<<<<<<< HEAD
   const [showVehicleOptions, setShowVehicleOptions] = useState(false);
   const [fareDetails, setFareDetails] = useState(null);
   const [totalFare, setTotalFare] = useState(null);
@@ -47,10 +59,15 @@ const Home = ({ navigation, route, onSelectVehicle }) => {
   const [showDirections, setShowDirections] = useState(true);
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState("");
+=======
+  const [fareDetails, setFareDetails] = useState(null);
+  const [totalFare, setTotalFare] = useState(null);
+  const [selectPaymentMethod, setSelectPaymentMethod] = useState(null);
+>>>>>>> parent of eee38bf (add ratings and feddback)
 
   const [state, setState] = useState({
     curLoc: {
-      latitude: 13.3646,
+      latitude: 13.3646, // Default to Marinduque latitude
       longitude: 121.9136,
     },
     isLoading: false,
@@ -63,9 +80,25 @@ const Home = ({ navigation, route, onSelectVehicle }) => {
     time: 0,
     distance: 0,
     heading: 0,
+    showVehicleOptions: false,
   });
 
+<<<<<<< HEAD
   const { curLoc, time, distance, isLoading, coordinate, heading } = state;
+=======
+
+  
+  const {
+    curLoc,
+    time,
+    distance,
+    destinationCords,
+    isLoading,
+    coordinate,
+    heading,
+    showVehicleOptions,
+  } = state;
+>>>>>>> parent of eee38bf (add ratings and feddback)
 
   const updateState = (data) => setState((state) => ({ ...state, ...data }));
 
@@ -114,7 +147,7 @@ const Home = ({ navigation, route, onSelectVehicle }) => {
       });
     } catch (error) {
       updateState({
-        errorMessage: error.message,
+        errorMessage: error.message, // Handle errors
       });
     }
   };
@@ -169,7 +202,7 @@ const Home = ({ navigation, route, onSelectVehicle }) => {
         return;
       }
 
-      //fare details
+      // Fetch fare details
       const fareResponse = await axios.get(
         "https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/admin-fare/fares",
         {
@@ -238,12 +271,15 @@ const Home = ({ navigation, route, onSelectVehicle }) => {
       setTotalFare(totalFare); // Update totalFare
       setShowSearching(true);
 
+      // Start polling for updates
       startPolling(response.data._id, token);
     } catch (error) {
       console.error("Error creating booking:", error);
+      // Handle error scenario
     }
   };
 
+<<<<<<< HEAD
   const handleCancelBooking = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -288,6 +324,8 @@ const Home = ({ navigation, route, onSelectVehicle }) => {
     }
   };
 
+=======
+>>>>>>> parent of eee38bf (add ratings and feddback)
   const startPolling = (bookingId, token) => {
     const intervalId = setInterval(async () => {
       try {
@@ -300,6 +338,7 @@ const Home = ({ navigation, route, onSelectVehicle }) => {
             },
           }
         );
+<<<<<<< HEAD
 
         const bookingDetails = bookingResponse.data;
 
@@ -322,21 +361,30 @@ const Home = ({ navigation, route, onSelectVehicle }) => {
             console.log("Driver ID not found in booking details.");
           }
         }
+=======
+        setBookingDetails(bookingResponse.data);
+>>>>>>> parent of eee38bf (add ratings and feddback)
       } catch (error) {
         console.error("Error fetching booking details:");
       }
+<<<<<<< HEAD
     }, 2000);
+=======
+    }, 2000); // Poll every 5 seconds
+>>>>>>> parent of eee38bf (add ratings and feddback)
 
     setPollingInterval(intervalId);
   };
 
   useEffect(() => {
+    // Clear polling interval on component unmount
     return () => {
       if (pollingInterval) {
         clearInterval(pollingInterval);
       }
     };
   }, [pollingInterval]);
+<<<<<<< HEAD
 
   const handleMessage = () => {
     navigation.navigate("MessageScreen");
@@ -420,6 +468,8 @@ const Home = ({ navigation, route, onSelectVehicle }) => {
   const handleReport = () => {
     navigation.navigate("ReportScreen");
   };
+=======
+>>>>>>> parent of eee38bf (add ratings and feddback)
 
   return (
     <View style={styles.container}>
@@ -544,6 +594,7 @@ const Home = ({ navigation, route, onSelectVehicle }) => {
         )}
 
         {bookingDetails?.driver && bookingDetails.status === "accepted" && (
+<<<<<<< HEAD
           <View style={styles.acceptedContainer}>
             <View style={styles.acceptedHeader}>
               <Text style={styles.acceptedText}>
@@ -675,6 +726,92 @@ const Home = ({ navigation, route, onSelectVehicle }) => {
             </TouchableOpacity>
           </View>
         )}
+=======
+  <View style={styles.acceptedContainer}>
+    <View style={styles.acceptedHeader}>
+      <Text style={styles.acceptedText}>
+        The driver is on the way to pick you up <Text>Time left: {time.toFixed(0)}</Text>
+      </Text>
+    </View>
+    <View style={styles.circle}/>
+    <Text style={{ fontWeight: '700' }}>{bookingDetails.driver.name}</Text>
+    {bookingDetails.driver.vehicleInfo2 && (
+      <Text style={{ fontWeight: '700' }}>
+        Plate Number: {bookingDetails.driver.vehicleInfo2.plateNumber || 'Not Available'}
+      </Text>
+    )}
+    <Text style={{ fontWeight: '700' }}>Total Fare: ₱{totalFare.toFixed(2)}</Text>
+    <Text>Pick up:</Text>
+    <Text>{bookingDetails.pickupLocation.latitude}, {bookingDetails.pickupLocation.longitude}</Text>
+    <Text>Destination:</Text>
+    <Text>{bookingDetails.destinationLocation.latitude}, {bookingDetails.destinationLocation.longitude}</Text>
+    <TouchableOpacity>
+      <Text style={styles.cancelButton}>Cancel Booking</Text>
+    </TouchableOpacity>
+  </View>
+)}
+
+
+
+        {bookingDetails?.status === "completed" &&  bookingDetails?.driver && (
+          <View style={styles.completedContainer}>
+            <Text style={{fontWeight: '700', fontSize: 24}}>Payment Summary</Text>
+
+            <View style={styles.driverDetails}>
+            <View style={styles.circle}/>
+            <View style={styles.driverInfo}>
+            <Text>Driver: {bookingDetails.driver.name}</Text>
+            <Text>Vehicle: {bookingDetails.vehicleType}</Text>
+            {bookingDetails.driver.vehicleInfo2 && (
+      <Text style={{ fontWeight: '700' }}>
+        Plate Number: {bookingDetails.driver.vehicleInfo2.plateNumber || 'Not Available'}
+      </Text>
+    )}
+            </View>
+            </View>
+            <Text>Date: {moment(bookingDetails.createdAt).format('MMMM DD, YYYY')}</Text>
+
+            <View style={styles.location}>
+            <Text>
+              Pick up: 
+            </Text>
+            <Text>{bookingDetails.pickupLocation.latitude},{" "}
+            {bookingDetails.pickupLocation.longitude}</Text>
+            <Text>
+              Destination: 
+            </Text>
+            <Text>{bookingDetails.destinationLocation.latitude},{" "}
+            {bookingDetails.destinationLocation.longitude}</Text>
+            </View>
+
+            <View style={styles.fare}>
+            <Text>Distance: {distance.toFixed(2)} km</Text>
+            <Text>Booking Fee: ₱{fareDetails?.bookingFee.toFixed(2)}</Text>
+            <Text>
+              Distance Fare: ₱{(fareDetails?.farePerKm * distance).toFixed(2)}
+            </Text>
+            <Text>Base Fare: ₱{fareDetails?.baseFare.toFixed(2)}</Text>
+            <Text>Total Fare: ₱{totalFare.toFixed(2)}</Text>
+            </View>
+            <View style={styles.paymentContainer}>
+      <Text style={styles.label}>Select Payment Method:</Text>
+      <RNPickerSelect
+        onValueChange={(value) => setSelectPaymentMethod(value)}
+        items={[
+          { label: 'Cash', value: 'Cash' },
+          { label: 'GCash', value: 'GCash' },
+        ]}
+        style={pickerSelectStyles}
+      />
+    </View>
+            <Text>Rate Your Driver</Text>
+            <Text>Overall Experience</Text>
+            <TouchableOpacity style={styles.button}>
+              <Text>Submit</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+>>>>>>> parent of eee38bf (add ratings and feddback)
       </View>
     </View>
   );
@@ -755,7 +892,11 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     backgroundColor: "gray",
+<<<<<<< HEAD
     borderRadius: 30,
+=======
+    borderRadius: 30, // Ensure the circle is properly rounded
+>>>>>>> parent of eee38bf (add ratings and feddback)
     justifyContent: "center",
     alignItems: "center",
   },
@@ -814,6 +955,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
   },
+<<<<<<< HEAD
   image: {
     width: 30,
     height: 30,
@@ -824,6 +966,8 @@ const styles = StyleSheet.create({
   ratings: {
     flexDirection: "row",
   },
+=======
+>>>>>>> parent of eee38bf (add ratings and feddback)
 });
 
 const pickerSelectStyles = StyleSheet.create({

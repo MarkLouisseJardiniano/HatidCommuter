@@ -34,11 +34,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     flex: 1,
-    backgroundColor:'white'
+    backgroundColor:'white' // Added flex: 1 to make sure the container fills the screen
   },
   buttonList: {
     flexDirection: "column",
-    marginTop: 20,
+    marginTop: 20, // Adjusted marginTop for better visibility
   },
   buttonText: {
     fontSize: 20,
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     height: 50,
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 10,
+    marginVertical: 10, // Added marginVertical for better spacing
   },
 });
 

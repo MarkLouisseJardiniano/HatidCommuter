@@ -13,7 +13,7 @@ const Login = () => {
       const userData = { email, password };
       const res = await axios.post('https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/login', userData);
   
-      console.log('Login Response:', res.data);  
+      console.log('Login Response:', res.data);  // Log the entire response for debugging
   
       if (res.data.status === 'ok') {
         const { token, userId } = res.data.data;
@@ -22,14 +22,14 @@ const Login = () => {
           throw new Error('User ID is missing in the response');
         }
   
-        await AsyncStorage.setItem('KeepLoggedIn', 'true');
+        await AsyncStorage.setItem('KeepLoggedIn', 'true');  // Ensure 'true' is a string
         await AsyncStorage.setItem('token', token);
-        await AsyncStorage.setItem('userId', userId); 
+        await AsyncStorage.setItem('userId', userId);  // Store user ID
   
         console.log('Token:', token);
         console.log('User ID:', userId);
   
-        navigation.replace("TabNav");
+        navigation.replace("TabNav");  // Navigate to TabNav screen after successful login
       } else {
         Alert.alert('Login Failed', res.data.message);
       }

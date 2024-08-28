@@ -10,7 +10,7 @@ const Activity = () => {
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    //fetching userId from AsyncStorage
+    // Simulate fetching userId from AsyncStorage or another source
     const fetchUserId = async () => {
       try {
         const storedUserId = await AsyncStorage.getItem('userId'); //stored userId
@@ -49,7 +49,7 @@ const Activity = () => {
           }
         ); 
 
-        console.log('API Response:', res);
+        console.log('API Response:', res); // Log the response
 
         if (res.data && res.data.data) {
           const activityData = res.data.data;

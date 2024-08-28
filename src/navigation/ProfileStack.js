@@ -1,6 +1,7 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 
+// Import your screen components here
 import EditProfile from '../Screeens/ProfileScreen/editProfile'; 
 import Profile from '../Screeens/ProfileScreen/profile'; 
 import SavedPlaces from '../Screeens/ProfileScreen/savedPlaces'; 

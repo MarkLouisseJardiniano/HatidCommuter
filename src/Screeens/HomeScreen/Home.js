@@ -3,13 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from "react-na
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Location from "expo-location"; 
+import * as Location from "expo-location"; // Import Expo location
 
 const Home = () => {
   const navigation = useNavigation();
   const [currentAddress, setCurrentAddress] = useState(null);
 
-  // fetch current address
+  // Function to fetch current address
   const getCurrentAddress = async () => {
     try {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -33,7 +33,7 @@ const Home = () => {
   };
 
   useEffect(() => {
-    getCurrentAddress(); // Fetch address 
+    getCurrentAddress(); // Fetch address when component mounts
   }, []);
 
   const handleRental = () => {

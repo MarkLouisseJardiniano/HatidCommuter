@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, ScrollView, ActivityIndicator } from "react-native";
-import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, ScrollView,FlatList, ActivityIndicator } from "react-native";
+import React, { useEffect, useState , useCallback} from 'react';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -32,7 +32,6 @@ const Activity = () => {
     const fetchActivities = async () => {
       try {
         if (!userId) return;
-
         setLoading(true);
         const token = await AsyncStorage.getItem('token');
         if (!token) {
@@ -69,48 +68,42 @@ const Activity = () => {
     fetchActivities();
   }, [userId]); // Fetch activities by userId
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Activities</Text>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : error ? (
-        <Text style={styles.error}>{error}</Text>
-      ) : (
-        <ScrollView>
-          {activities.length > 0 ? (
-            activities.map((item) => (
-              <View key={item._id} style={styles.activityContainer}>
-                <View style={styles.activityContent}>
-                <View style={styles.activity}>
-                <View style={styles.circle} />
-                <View style={styles.driverData}>
-                  <Text>{item.name}</Text>
-                  <View style={styles.vehicleData}>
+  const renderItem = useCallback(({ item }) => (
+    <View style={styles.activityContainer}>
+      <View style={styles.activityContent}>
+        <View style={styles.activity}>
+          <View style={styles.circle} />
+          <View style={styles.driverData}>
+            <Text>{item.name}</Text>
+            <View style={styles.vehicleData}>
                   <Text>Vehicle{item.vehicleInfo2?.vehicleType}</Text>
                   <Text>Plate{item.vehicleInfo2?.plateNumber}</Text>
                   </View>
-                  </View>
-                  <View style={styles.rightSection}>
-                  <View style={styles.statusContainer}>
-                  <Text>{item.status}</Text>
-                  </View>
-                  <Text>Fare {item.fare}</Text>
-                  </View>
-                </View>
-                </View>
-                <View style={styles.locationContainer}>
-                  <Text>Pick Up Location: ({item.pickupLocation?.latitude}, {item.pickupLocation?.longitude})</Text>
-                  <Text>Drop Off Location: ({item.destinationLocation?.latitude}, {item.destinationLocation?.longitude})</Text>
-                </View>
-              </View>
-            ))
-          ) : (
-            <Text>No activities found.</Text>
-          )}
-        </ScrollView>
-      )}
+          </View>
+          <View style={styles.rightSection}>
+            <View style={styles.statusContainer}>
+              <Text>{item.status}</Text>
+            </View>
+            <Text>Fare {item?.fare ? item.fare.toFixed(2) : '0.00'}</Text>
+
+          </View>
+        </View>
+      </View>
+      <View style={styles.locationContainer}>
+        <Text>Pick Up Location: ({item.pickupLocation?.latitude}, {item.pickupLocation?.longitude})</Text>
+        <Text>Drop Off Location: ({item.destinationLocation?.latitude}, {item.destinationLocation?.longitude})</Text>
+      </View>
+    </View>
+  ), []);
+
+  return (
+    <View style={styles.container}>
+       <FlatList
+    data={activities}
+    keyExtractor={(item) => item._id}
+    renderItem={renderItem}
+  />
     </View>
   );
 };

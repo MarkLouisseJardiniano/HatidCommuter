@@ -7,6 +7,7 @@ import ChooseLocation from "../Screeens/RideScreen/ChooseLocation";
 import Home from "../Screeens/RideScreen/index";
 import BookingDetails from "../Screeens/RideScreen/BookingDetails";
 import MessageScreen from "../Screeens/RideScreen/Message";
+import Report from "../Screeens/RideScreen/report";
 
 export default function Layout() {
   const Stack = createStackNavigator();
@@ -21,6 +22,7 @@ export default function Layout() {
       <Stack.Screen name="chooseLocation" component={ChooseLocation} />
       <Stack.Screen name="BookingDetails" component={BookingDetails } />
       <Stack.Screen name="MessageScreen" component={MessageScreen } />
+      <Stack.Screen name="ReportScreen" component={Report } options={{ headerShown: true }}/>
     </Stack.Navigator>
     </>
   );

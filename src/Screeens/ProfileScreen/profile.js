@@ -81,7 +81,7 @@ const Profile = () => {
 const styles = StyleSheet.create({
   rowContainer: {
     flex: 1,
-    backgroundColor: 'white', // Set background color to white
+    backgroundColor: 'white', 
   },
   fullWidthBox: {
     height: 150,

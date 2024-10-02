@@ -1,4 +1,3 @@
-import React from "react";
 import {
   View,
   TextInput,
@@ -7,33 +6,59 @@ import {
   TouchableOpacity,
   Text,
 } from "react-native";
+import React, { useState } from "react";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const AddContact = () => {
-  const [name, setName] = React.useState("");
-  const [number, setNumber] = React.useState("");
+const AddContact = ({ navigation }) => {
+  const [name, setName] = useState("");
+  const [number, setNumber] = useState("");
 
-  const handleSave = () => {
-    Alert.alert("Saved");
+  const handleSave = async () => {
+    if (!name || !number) {
+      Alert.alert("Error", "All fields are required.");
+      return;
+    }
+
+    try {
+      const userId = await AsyncStorage.getItem("userId");
+      if (!userId) {
+        Alert.alert("Error", "User ID is not found.");
+        return;
+      }
+
+      const response = await axios.post("https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/contact/add", {
+        userId,
+        name,
+        number,
+      });
+
+      if (response.status === 201) {
+        Alert.alert("Success", "Contact saved successfully!");
+        navigation.goBack();
+      } else {
+        Alert.alert("Error", "Failed to save contact.");
+      }
+    } catch (error) {
+      console.error("Error saving contact:", error);
+      Alert.alert("Error", "Failed to save contact.");
+    }
   };
+
   return (
     <View style={styles.container}>
       <TextInput
-        label="Name"
         placeholder="Name"
         value={name}
-        onChangeText={(name) => setName(name)}
-        mode="flat"
+        onChangeText={(text) => setName(text)}
         style={styles.input}
-        underlineColor="transparent"
       />
       <TextInput
-        label="Number"
         placeholder="Phone Number"
         value={number}
-        onChangeText={(number) => setNumber(number)}
-        mode="flat"
+        onChangeText={(text) => setNumber(text)}
         style={styles.input}
-        underlineColor="transparent"
+        keyboardType="phone-pad"
       />
 
       <View style={styles.buttonPosition}>
@@ -44,6 +69,7 @@ const AddContact = () => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -58,7 +84,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   buttonPosition: {
-    marginTop: 280,
+    marginTop: 20, // Adjusted for better positioning
     alignItems: "center",
     justifyContent: "center",
   },

@@ -7,15 +7,11 @@ import { showError } from "../../helper/helperFunction";
 
 const ChooseLocation = ({ route }) => {
   const navigation = useNavigation();
-
-  const [state, setState] = useState({
-    destinationCords: {},
-  });
-
-  const { destinationCords } = state;
+  const [destinationCords, setDestinationCords] = useState(null); // Initialize as null
 
   const checkValid = () => {
-    if (Object.keys(destinationCords).length === 0) {
+    // Check if destinationCords is null or an empty object
+    if (!destinationCords || Object.keys(destinationCords).length === 0) {
       showError("Please enter your destination location");
       return false;
     }
@@ -34,12 +30,9 @@ const ChooseLocation = ({ route }) => {
   const fetchDestinationCords = (lat, lng, zipCode, cityText) => {
     console.log("Zip code:", zipCode);
     console.log("City text:", cityText);
-    setState({
-      ...state,
-      destinationCords: {
-        latitude: lat,
-        longitude: lng,
-      },
+    setDestinationCords({
+      latitude: lat,
+      longitude: lng,
     });
   };
 

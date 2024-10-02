@@ -23,7 +23,7 @@ const Home = () => {
       let address = await Location.reverseGeocodeAsync({ latitude: coords.latitude, longitude: coords.longitude });
       
       // Construct the address string from the address object
-      let fullAddress = `${address[0].street}, ${address[0].city}, ${address[0].region}, ${address[0].country}`;
+      let fullAddress = `${address[0].street}, ${address[0].village}, ${address[0].city}`;
 
       setCurrentAddress(fullAddress);
     } catch (error) {

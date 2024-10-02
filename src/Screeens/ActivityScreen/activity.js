@@ -10,10 +10,10 @@ const Activity = () => {
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    // Simulate fetching userId from AsyncStorage or another source
+  
     const fetchUserId = async () => {
       try {
-        const storedUserId = await AsyncStorage.getItem('userId'); //stored userId
+        const storedUserId = await AsyncStorage.getItem('userId');
         if (storedUserId) {
           setUserId(storedUserId);
         } else {
@@ -38,7 +38,7 @@ const Activity = () => {
           throw new Error("No token found");
         }
 
-        console.log('Fetching activities for userId:', userId); // Log userId
+        console.log('Fetching activities for userId:', userId);
 
         const res = await axios.get(
           `https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/ride/activities/${userId}`,
@@ -49,11 +49,15 @@ const Activity = () => {
           }
         ); 
 
-        console.log('API Response:', res); // Log the response
-
+        console.log('API Response:', res); 
         if (res.data && res.data.data) {
           const activityData = res.data.data;
-          setActivities(activityData);
+          
+          const sortedActivities = [...activityData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  
+          console.log('Sorted activities:', sortedActivities);
+          
+          setActivities(sortedActivities);
         } else {
           setError("No activities found.");
         }
@@ -66,7 +70,7 @@ const Activity = () => {
     };
 
     fetchActivities();
-  }, [userId]); // Fetch activities by userId
+  }, [userId]); 
 
 
   const renderItem = useCallback(({ item }) => (

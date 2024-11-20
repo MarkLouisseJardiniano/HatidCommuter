@@ -28,7 +28,7 @@ const Profile = () => {
     const fetchData = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        const res = await axios.post('https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/userdata', { token });
+        const res = await axios.post('https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/userdata', { token });
         if (res.data.status === 'ok') {
           setUserData(res.data.data);
         } else {

@@ -27,7 +27,7 @@ const AddContact = ({ navigation }) => {
         return;
       }
 
-      const response = await axios.post("https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/contact/add", {
+      const response = await axios.post("https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/contact/add", {
         userId,
         name,
         number,

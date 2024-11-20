@@ -40,7 +40,7 @@ const SavedPlaces = () => {
     const fetchSavedPlaces = async () => {
       try {
         // Replace with your actual API endpoint
-        const response = await axios.get(`https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/saved/saved-places/${userId}`);
+        const response = await axios.get(`https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/saved/saved-places/${userId}`);
         const { home, work } = response.data;
         setSavedPlaces({
           home: home || null,  

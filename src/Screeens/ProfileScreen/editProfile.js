@@ -33,7 +33,7 @@ const EditProfile = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       const res = await axios.put(
-        `https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/edituser/${userId}`,
+        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/edituser/${userId}`,
         {
           profilePic,
           name,
@@ -62,7 +62,7 @@ const EditProfile = () => {
     const fetchData = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        const res = await axios.post('https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/userdata', { token });
+        const res = await axios.post('https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/userdata', { token });
         if (res.data.status === 'ok') {
           const data = res.data.data;
           setUserData(data);

@@ -4,5 +4,7 @@ export default {
     greenIndicator: require("../../assets/images/greenIndicator.png"),
     icBike: require("../../assets/images/Oval.png"),
     star: require("../../assets/images/star.png"),
-    starFilled: require("../../assets/images/starFilled.png")
+    starFilled: require("../../assets/images/starFilled.png"),
+    verification: require("../../assets/images/verification.jpg"),
+    check: require("../../assets/images/check.jpg"),
 }

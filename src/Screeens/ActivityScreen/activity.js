@@ -41,7 +41,7 @@ const Activity = () => {
         console.log('Fetching activities for userId:', userId);
 
         const res = await axios.get(
-          `https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/ride/activities/${userId}`,
+          `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/activities/${userId}`,
           {
             headers: {
               "Authorization": `Bearer ${token}`,
@@ -52,12 +52,31 @@ const Activity = () => {
         console.log('API Response:', res); 
         if (res.data && res.data.data) {
           const activityData = res.data.data;
-          
-          const sortedActivities = [...activityData].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  
+          const sortedActivities = await Promise.all(
+            activityData.map(async (activity) => {
+              const pickupAddress = await getAddress(
+                activity.pickupLocation.latitude,
+                activity.pickupLocation.longitude
+              );
+              const destinationAddress = await getAddress(
+                activity.destinationLocation.latitude,
+                activity.destinationLocation.longitude
+              );
+
+              return {
+                ...activity,
+                pickupAddress,
+                destinationAddress,
+              };
+            })
+          );
+          const sortedByDate = sortedActivities.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+
           console.log('Sorted activities:', sortedActivities);
-          
-          setActivities(sortedActivities);
+  
+          setActivities(sortedByDate);
         } else {
           setError("No activities found.");
         }
@@ -72,6 +91,33 @@ const Activity = () => {
     fetchActivities();
   }, [userId]); 
 
+  const getAddress = async (latitude, longitude) => {
+    try {
+      const reverseGeocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=pk.eyJ1IjoibWF3aTIxIiwiYSI6ImNseWd6ZGp3aTA1N2IyanM5Ymp4eTdvdzYifQ.0mYPMifHNHONTvY6mBbkvg`;
+      const geoResponse = await axios.get(reverseGeocodeUrl);
+      if (geoResponse.data.features.length > 0) {
+        let barangay = '';
+        let district = '';
+
+        const addressComponents = geoResponse.data.features[0].context;
+
+        addressComponents.forEach((component) => {
+          if (component.id.includes('locality')) {
+            barangay = component.text;
+          } else if (component.id.includes('place')) {
+            district = component.text;
+          }
+        });
+
+        return `${barangay}, ${district}` || 'Address not found';
+      }
+      return 'Address not found';
+    } catch (error) {
+      console.error('Error fetching address:', error);
+      return 'Address not found';
+    }
+  };
+
 
   const renderItem = useCallback(({ item }) => (
     <View style={styles.activityContainer}>
@@ -79,24 +125,27 @@ const Activity = () => {
         <View style={styles.activity}>
           <View style={styles.circle} />
           <View style={styles.driverData}>
-            <Text>{item.name}</Text>
+            <Text style={{ fontSize: 16, fontWeight: "bold",}}>{item.name}</Text>
             <View style={styles.vehicleData}>
-                  <Text>Vehicle{item.vehicleInfo2?.vehicleType}</Text>
-                  <Text>Plate{item.vehicleInfo2?.plateNumber}</Text>
-                  </View>
-          </View>
+            <View style={{  flexDirection: 'row', gap: 10}}>
+            <Text style={{ fontSize: 16,}}>{item.driver?.vehicleInfo2.vehicleType}</Text>
+            <Text style={{ fontSize: 16,}}>{item.driver?.vehicleInfo2.plateNumber}</Text>
+            </View>
+                  
+          
           <View style={styles.rightSection}>
             <View style={styles.statusContainer}>
-              <Text>{item.status}</Text>
+              <Text style={{color: "white"}}>{item.status}</Text>
             </View>
-            <Text>Fare {item?.fare ? item.fare.toFixed(2) : '0.00'}</Text>
-
+            <Text  style={{ fontSize: 16, fontWeight: "bold",}}>Fare {item?.fare ? item.fare.toFixed(2) : '0.00'}</Text>
+</View>
+</View>
           </View>
         </View>
       </View>
       <View style={styles.locationContainer}>
-        <Text>Pick Up Location: ({item.pickupLocation?.latitude}, {item.pickupLocation?.longitude})</Text>
-        <Text>Drop Off Location: ({item.destinationLocation?.latitude}, {item.destinationLocation?.longitude})</Text>
+      <Text style={{ fontSize: 16,}}>Pickup Address: {item.pickupAddress}</Text>
+      <Text style={{ fontSize: 16,}}>Destination Address: {item.destinationAddress}</Text>
       </View>
     </View>
   ), []);
@@ -138,25 +187,39 @@ const styles = StyleSheet.create({
   },
   activityContainer: {
     padding: 20,
-    backgroundColor: "powderblue",
+    backgroundColor: "white",
     borderRadius: 10,
     elevation: 2, 
     shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 5 }, 
-    shadowOpacity: 1, 
+    borderTopColor: "lightgray", // change color to whatever you need
+    borderTopWidth: 1, // adjust width as needed
+    borderBottomColor: "lightgray", // change color to whatever you need
+    borderBottomWidth: 1, 
     shadowRadius: 6,
     marginBottom: 10,
+    borderLeftColor: "lightgray", // change color to whatever you need
+    borderLeftWidth: 1, // adjust width as needed
+    borderRightColor: "lightgray", // change color to whatever you need
+    borderRightWidth: 1,
   },
   activity: {
     flexDirection: 'row',
   },
   driverData: {
-    marginRight: 90,
-    justifyContent: 'center'
+    flexDirection: 'column',
+    justifyContent: "space-between",
+    
+    
+
   },
   vehicleData: {
     flexDirection: 'row',
-    gap: 20
+    justifyContent: "space-between",
+    alignItems: 'center',
+    width: '85%',
+    
+    
+
   },
   rightSection: {
     flexDirection: 'column'
@@ -165,9 +228,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   statusContainer: {
-    backgroundColor: 'white',
+    backgroundColor: 'black',
     paddingTop: 2,
-    paddingBottom: 2,
+    paddingBottom: 3,
     paddingRight: 10,
     paddingLeft: 10,
     borderRadius: 10

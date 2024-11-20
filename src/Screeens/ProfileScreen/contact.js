@@ -19,7 +19,7 @@ const Contact = () => {
     if (!userId) return;
     try {
       const response = await axios.get(
-        `https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/contact/user/${userId}`
+        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/contact/user/${userId}`
       );
       const fetchedContacts = response.data.length > 0 ? response.data : [];
       setContacts(fetchedContacts);
@@ -97,6 +97,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: "white"
   },
   contactContainer: {
     padding: 10,

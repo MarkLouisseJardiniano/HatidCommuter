@@ -102,7 +102,7 @@ const AddSavedPlaceNew = ({ route }) => {
       console.log("Selected Location:", selectedLocation);
       try {
         const response = await axios.post(
-          "https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/saved/saved-place",
+          "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/saved/saved-place",
           {
             userId,
             placeType: "New",

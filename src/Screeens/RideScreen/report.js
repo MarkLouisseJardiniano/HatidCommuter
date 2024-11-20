@@ -9,45 +9,46 @@ const Report = () => {
   const [bookingId, setBookingId] = useState(null);
   const [driverId, setDriverId] = useState(null);
   const [userId, setUserId] = useState(null);
-
+  const [driverName, setDriverName] = useState('');
+  const [plateNumber, setPlateNumber] = useState('');
+  const [vehicleType, setVehicleType] = useState('');
   useEffect(() => {
     const fetchIds = async () => {
       try {
         const storedBookingId = await AsyncStorage.getItem('bookingId');
+        console.log("Stored Booking ID: ", storedBookingId);
         const storedDriverId = await AsyncStorage.getItem('driverId');
         const storedUserId = await AsyncStorage.getItem('userId');
-  
+
         console.log("Fetched IDs:", { storedBookingId, storedDriverId, storedUserId });
-  
+
         if (storedBookingId) {
-          console.log("Booking ID fetched:", storedBookingId);
           setBookingId(storedBookingId);
-        } else {
-          console.log("No Booking ID found.");
         }
-  
         if (storedDriverId) {
-          console.log("Driver ID fetched:", storedDriverId);
           setDriverId(storedDriverId);
-        } else {
-          console.log("No Driver ID found.");
+          
+          // Fetch the driver's name based on the driverId
+          const response = await axios.get(`https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/driver/driver/${storedDriverId}`);
+          if (response.data && response.data.name) {
+            setDriverName(response.data.name);
+            setPlateNumber(response.data.vehicleInfo2.plateNumber);
+            setVehicleType(response.data.vehicleInfo2.vehicleType)
+          } else {
+            setDriverName('Unknown Driver'); // Fallback if no name is found
+          }
         }
-  
         if (storedUserId) {
-          console.log("User ID fetched:", storedUserId);
           setUserId(storedUserId);
-        } else {
-          console.log("No User ID found.");
         }
       } catch (error) {
-        console.error("Error fetching IDs:", error);
+        console.error("Error fetching IDs or driver's name:", error);
       }
     };
-  
+
     fetchIds();
   }, []);
-  
-  
+
   const handleReport = async () => {
     if (!bookingId || !driverId || !userId) {
       Alert.alert("Error", "IDs for booking, driver, and user are required.");
@@ -60,7 +61,7 @@ const Report = () => {
     }
 
     try {
-      const response = await axios.post('https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/violate/violation', {
+      const response = await axios.post('https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/violate/violation', {
         bookingId,
         driverId,
         userId,
@@ -87,8 +88,8 @@ const Report = () => {
       onPress={() => setSelectedOption(value)}
     >
       <View
-        style={[
-          styles.radioButtonCircle,
+        style={[ 
+          styles.radioButtonCircle, 
           selectedOption === value && styles.radioButtonCircleSelected,
         ]}
       />
@@ -97,7 +98,21 @@ const Report = () => {
 
   return (
     <View style={styles.container}>
+    <View style={{flexDirection: "row",  alignItems: "center",    }}>
+    <View style={styles.circle} />
+      <View style={{ justifyContent: 'center',}}>
+      <Text style={styles.driverName}>{driverName}</Text>
+      <View style={{flexDirection: "row"}}>
+      <Text style={styles.driverName}>{vehicleType}</Text>
+      <Text style={styles.driverName}>{plateNumber}</Text>
+      </View>
+      </View>
+    </View>
+  
+
+
       <View style={styles.subsOption}>
+      <Text style={{    fontSize: 20, fontWeight: 'bold',}}>What went wrong?</Text>
         <View style={styles.selection}>
           {renderRadioButton('Harassment')}
           <Text style={styles.optionText}>Harassment</Text>
@@ -108,7 +123,7 @@ const Report = () => {
         </View>
         <View style={styles.selection}>
           {renderRadioButton('Lateness')}
-          <Text style={styles.optionText}>Lateness</Text>
+          <Text style={styles.optionText}>Late Arrival</Text>
         </View>
         <View style={styles.selection}>
           {renderRadioButton('Vehicle Condition')}
@@ -116,16 +131,22 @@ const Report = () => {
         </View>
         <View style={styles.selection}>
           {renderRadioButton('Rudeness')}
-          <Text style={styles.optionText}>Rudeness</Text>
+          <Text style={styles.optionText}>Rude Behavior</Text>
+        </View>
+        <View style={styles.selection}>
+          {renderRadioButton('Rudeness')}
+          <Text style={styles.optionText}>Other</Text>
         </View>
       </View>
+      <Text style={{    fontSize: 20, fontWeight: 'bold',}}>Additional Details</Text>
       <TextInput
         style={styles.textInput}
-        placeholder="Leave your report here..."
+        placeholder="Please provide any additional information about the incident..."
         value={description}
         onChangeText={setDescription}
         multiline
       />
+
       <TouchableOpacity style={styles.submitButton} onPress={handleReport}>
         <Text style={styles.submitButtonText}>Submit Report</Text>
       </TouchableOpacity>
@@ -134,14 +155,29 @@ const Report = () => {
 };
 
 const styles = StyleSheet.create({
+  circle: {
+    width: 60,
+    height: 60,
+    backgroundColor: "gray",
+    borderRadius: 30,
+    marginLeft: 30,
+    marginTop: 0,
+    marginRight: '5%',
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     padding: 20,
     flexDirection: 'column',
     flex: 1,
   },
+  driverName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   subsOption: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: 'column',
+
   },
   selection: {
     flexDirection: 'row',
@@ -150,6 +186,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     fontSize: 16,
+    fontWeight: 'bold',
     marginLeft: 10,
   },
   radioButton: {

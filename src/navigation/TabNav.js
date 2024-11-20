@@ -49,7 +49,7 @@ const TabNav = () => {
         options={{
           tabBarLabel: 'Activity',
           tabBarLabelStyle: { color: '#008E97' },
-          headerShown: false,
+       
           tabBarIcon: ({ focused }) =>
             focused ? (
               <AntDesign name="plussquare" size={24} color="black" />

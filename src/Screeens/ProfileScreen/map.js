@@ -75,7 +75,7 @@ const Map = () => {
   
     // Send data to backend
     try {
-      const response = await axios.post('https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/saved/saved-place', dataToSend);
+      const response = await axios.post('https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/saved/saved-place', dataToSend);
       console.log("Response from Backend:", response.data);
       Alert.alert("Success", "Saved Place Successfully");
     } catch (error) {

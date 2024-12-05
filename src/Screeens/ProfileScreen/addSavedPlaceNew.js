@@ -1,4 +1,3 @@
-import { useNavigation } from "@react-navigation/native";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -13,15 +12,16 @@ import { showError } from "../../helper/helperFunction";
 import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from "expo-location";
+import { useNavigation } from "@react-navigation/native";
 
 const AddSavedPlaceNew = ({ route }) => {
   const navigation = useNavigation();
   const [destinationCords, setDestinationCords] = useState(null);
-  const [selectedLocation, setSelectedLocation] = useState(null); // State for selected location
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
-  const [userId, setUserId] = useState(null); // Add state for userId
-  const [mapRegion, setMapRegion] = useState(null); // Add state for mapRegion
-  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [userId, setUserId] = useState(null);
+  const [mapRegion, setMapRegion] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const screen = Dimensions.get("window");
   const ASPECT_RATIO = screen.width / screen.height;
@@ -47,83 +47,74 @@ const AddSavedPlaceNew = ({ route }) => {
     getCurrentLocation();
   }, []);
 
- useEffect(() => {
-  const fetchUserId = async () => {
-    try {
-      const storedUserId = await AsyncStorage.getItem('userId');
-      console.log('Retrieved userId:', storedUserId);
-
-      if (storedUserId) {
-        setUserId(storedUserId);
-      } else {
-        Alert.alert("Error", "User ID not found. Please log in again.");
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const storedUserId = await AsyncStorage.getItem('userId');
+        if (storedUserId) {
+          setUserId(storedUserId);
+        } else {
+          Alert.alert("Error", "User ID not found. Please log in again.");
+        }
+      } catch (error) {
+        console.error("Error fetching user ID:", error);
+        Alert.alert("Error", "Error fetching user ID");
       }
-    } catch (error) {
-      console.error("Error fetching user ID:", error);
-      Alert.alert("Error", "Error fetching user ID");
-    }
-  };
+    };
 
-  fetchUserId();
-}, []);
-
-  useEffect(() => {
-    if (destinationCords) {
-      // Update the map region when destinationCords changes
-      setMapRegion({
-        latitude: destinationCords.latitude,
-        longitude: destinationCords.longitude,
-        latitudeDelta: LATITUDE_DELTA,
-        longitudeDelta: LONGITUDE_DELTA,
-      });
-      setSearchQuery(""); // Clear search query if destination is set directly
-    }
-  }, [destinationCords]);
-
-  useEffect(() => {
-    if (selectedLocation) {
-      // Update the search query when a location is selected on the map
-      setSearchQuery(""); // Clear search query if location is set directly
-    }
-  }, [selectedLocation]);
+    fetchUserId();
+  }, []);
 
   const checkValid = () => {
-    if (!selectedLocation) { // Ensure selectedLocation is used for validation
+    if (!selectedLocation) {
       showError("Please select a location on the map");
       return false;
     }
     return true;
   };
-
+  const MARINDUQUE_BOUNDS = {
+    latitudeMin: 12.8066,
+    latitudeMax: 13.5595,
+    longitudeMin: 121.8020,
+    longitudeMax: 122.0708,
+  };
+  
+  const isLocationInMarinduque = (location) => {
+    const { latitude, longitude } = location;
+    
+    return (
+      latitude >= MARINDUQUE_BOUNDS.latitudeMin &&
+      latitude <= MARINDUQUE_BOUNDS.latitudeMax &&
+      longitude >= MARINDUQUE_BOUNDS.longitudeMin &&
+      longitude <= MARINDUQUE_BOUNDS.longitudeMax
+    );
+  };
+  
   const onSave = async () => {
     const isValid = checkValid();
     if (isValid) {
-      console.log("Saving place with userId:", userId);
-      console.log("Selected Location:", selectedLocation);
-      try {
-        const response = await axios.post(
-          "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/saved/saved-place",
-          {
-            userId,
-            placeType: "New",
-            savedLocation: {
-              latitude: selectedLocation.latitude, // Use selectedLocation for saving
-              longitude: selectedLocation.longitude,
-            },
-          }
+      if (!isLocationInMarinduque(selectedLocation)) {
+        Alert.alert(
+          "Invalid Location",
+          "The selected location is outside Marinduque. Please choose a location within the island.",
+          [{ text: "OK" }]
         );
-        console.log("Saved place response:", response.data);
-        navigation.navigate("SavedPlaces"); // Navigate to home screen or wherever you need to go
+        return;
+      }
+  
+      try {
+        navigation.navigate("AddNewSavedPlaceForm", {
+          selectedLocation: selectedLocation,
+        });
       } catch (error) {
         console.error("Error saving place:", error);
         showError("Failed to save place");
       }
     }
   };
+  
 
   const fetchDestinationCords = (lat, lng, zipCode, cityText) => {
-    console.log("Zip code:", zipCode);
-    console.log("City text:", cityText);
     setDestinationCords({
       latitude: lat,
       longitude: lng,
@@ -132,21 +123,18 @@ const AddSavedPlaceNew = ({ route }) => {
       latitude: lat,
       longitude: lng,
     });
-    // Update map region to center on the destination coordinates
     setMapRegion({
       latitude: lat,
       longitude: lng,
       latitudeDelta: LATITUDE_DELTA,
       longitudeDelta: LONGITUDE_DELTA,
     });
-    setSearchQuery(`${cityText}, ${zipCode}`); // Update the search query
+    setSearchQuery(`${cityText}, ${zipCode}`);
   };
 
   const handleMapPress = (event) => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
-    console.log("Selected Location:", { latitude, longitude });
     setSelectedLocation({ latitude, longitude });
-    // Update the map region to center on the selected location
     setMapRegion({
       latitude,
       longitude,
@@ -177,20 +165,18 @@ const AddSavedPlaceNew = ({ route }) => {
         )}
       </MapView>
 
-      {/* Floating Search Bar */}
       <View style={styles.searchContainer}>
         <AddressPickup
-          placeholderText="Enter Location for Home"
+          placeholderText="Enter Location"
           fetchAddress={fetchDestinationCords}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
       </View>
 
-      {/* Save Button */}
       <View style={styles.saveButtonContainer}>
         <CustomBtn
-          btnText="Save Home"
+          btnText="Save"
           onPress={onSave}
           btnStyle={styles.customBtn}
         />
@@ -212,12 +198,12 @@ const styles = StyleSheet.create({
     top: 20,
     left: 20,
     right: 20,
-    zIndex: 1, // Ensure the search bar is on top of the map
+    zIndex: 1,
     backgroundColor: "white",
     padding: 10,
     borderRadius: 10,
-    elevation: 5, // For shadow on Android
-    shadowColor: "#000", // For shadow on iOS
+    elevation: 5,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
@@ -227,12 +213,11 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 20,
     right: 20,
-    zIndex: 1, // Ensure the button is on top of the map
+    zIndex: 1,
     backgroundColor: "white",
     borderRadius: 10,
-    elevation: 5, // For shadow on Android
+    elevation: 5,
   },
-  
 });
 
 export default AddSavedPlaceNew;

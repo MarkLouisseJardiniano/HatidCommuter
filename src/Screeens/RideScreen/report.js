@@ -1,86 +1,94 @@
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Alert,Image } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const Report = () => {
+import imagePath from '../../constants/imagePath';
+const Report = ({route}) => {
+  
   const [selectedOption, setSelectedOption] = useState('');
   const [description, setDescription] = useState('');
   const [bookingId, setBookingId] = useState(null);
-  const [driverId, setDriverId] = useState(null);
+  const { driverId } = route.params;
   const [userId, setUserId] = useState(null);
   const [driverName, setDriverName] = useState('');
   const [plateNumber, setPlateNumber] = useState('');
   const [vehicleType, setVehicleType] = useState('');
-  useEffect(() => {
-    const fetchIds = async () => {
-      try {
-        const storedBookingId = await AsyncStorage.getItem('bookingId');
-        console.log("Stored Booking ID: ", storedBookingId);
-        const storedDriverId = await AsyncStorage.getItem('driverId');
-        const storedUserId = await AsyncStorage.getItem('userId');
+const [profile, setProfile] = useState(null);
 
-        console.log("Fetched IDs:", { storedBookingId, storedDriverId, storedUserId });
+useEffect(() => {
+  const fetchIds = async () => {
+    try {
+      const storedBookingId = await AsyncStorage.getItem('bookingId');
+      const storedUserId = await AsyncStorage.getItem('userId');
 
-        if (storedBookingId) {
-          setBookingId(storedBookingId);
-        }
-        if (storedDriverId) {
-          setDriverId(storedDriverId);
-          
-          // Fetch the driver's name based on the driverId
-          const response = await axios.get(`https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/driver/driver/${storedDriverId}`);
-          if (response.data && response.data.name) {
-            setDriverName(response.data.name);
-            setPlateNumber(response.data.vehicleInfo2.plateNumber);
-            setVehicleType(response.data.vehicleInfo2.vehicleType)
-          } else {
-            setDriverName('Unknown Driver'); // Fallback if no name is found
-          }
-        }
-        if (storedUserId) {
-          setUserId(storedUserId);
-        }
-      } catch (error) {
-        console.error("Error fetching IDs or driver's name:", error);
+      if (storedBookingId) {
+        setBookingId(storedBookingId);
       }
-    };
+      if (storedUserId) {
+        setUserId(storedUserId);
+      }
+    } catch (error) {
+      console.error("Error fetching IDs or driver's name:", error);
+    }
+  };
 
-    fetchIds();
-  }, []);
+  fetchIds();
+}, []);
+
 
   const handleReport = async () => {
+    console.log("Booking ID:", bookingId);
+    console.log("Driver ID:", driverId);
+    console.log("User ID:", userId);
+    console.log("Selected Report Option:", selectedOption);
+    console.log("Description:", description);
+  
     if (!bookingId || !driverId || !userId) {
       Alert.alert("Error", "IDs for booking, driver, and user are required.");
+      console.log("Error: Missing required IDs.");
       return;
     }
-
-    if (!selectedOption || !description) {
+  
+    if (!selectedOption) {
       Alert.alert("Error", "Please select a report type and enter a description.");
+      console.log("Error: Missing report type or description.");
       return;
     }
-
+  
     try {
-      const response = await axios.post('https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/violate/violation', {
+      console.log("Sending report data:", {
         bookingId,
         driverId,
         userId,
         report: selectedOption,
         description
       });
-
+  
+      const response = await axios.post('https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/violate/violation', {
+        bookingId,
+        driverId: driverId,
+        userId,
+        report: selectedOption,
+        description
+      });
+  
+      console.log("Response from API:", response.data);
+  
       if (response.data.status === 'ok') {
         Alert.alert("Success", "Report submitted successfully.");
+        console.log("Report submitted successfully.");
         setSelectedOption('');
         setDescription('');
       } else {
         Alert.alert("Error", response.data.message || "Failed to submit the report.");
+        console.log("Error: " + (response.data.message || "Failed to submit the report."));
       }
     } catch (error) {
       console.error("Error submitting report:", error);
       Alert.alert("Error", "An error occurred while submitting the report.");
     }
   };
+  
 
   const renderRadioButton = (value) => (
     <TouchableOpacity
@@ -99,7 +107,6 @@ const Report = () => {
   return (
     <View style={styles.container}>
     <View style={{flexDirection: "row",  alignItems: "center",    }}>
-    <View style={styles.circle} />
       <View style={{ justifyContent: 'center',}}>
       <Text style={styles.driverName}>{driverName}</Text>
       <View style={{flexDirection: "row"}}>

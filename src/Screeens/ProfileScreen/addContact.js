@@ -27,7 +27,7 @@ const AddContact = ({ navigation }) => {
         return;
       }
 
-      const response = await axios.post("https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/contact/add", {
+      const response = await axios.post("https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/contact/add", {
         userId,
         name,
         number,

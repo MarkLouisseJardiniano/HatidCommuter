@@ -15,49 +15,36 @@ const Signup = () => {
 
   const handleSignupAndRequestOtp = async () => {
     try {
-      console.log("Signing up with email:", email); 
-
+      console.log("Signing up with email:", email);
+  
       const emailCheckResponse = await axios.post(
-        'https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/check-email', 
+        'https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/check-email', 
         { email }
       );
   
       if (emailCheckResponse.data.exists) {
-        // If the email exists, show an alert and stop further actions
-        Alert.alert( 'This email is already registered.');
+        Alert.alert('This email is already registered.');
         return;
       }
   
-      const signupResponse = await axios.post(
-        'https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/signup',
-        { name, email, password, number, birthday, address }
+      console.log("Requesting OTP with email:", email);
+      const otpResponse = await axios.post(
+        'https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/otp/generate-otp',
+        { email, name }
       );
   
-      console.log("Signup Response:", signupResponse.data);  
+      console.log("OTP Response:", otpResponse.data);
   
-      if (signupResponse.data.message === 'User created successfully') {
-        await AsyncStorage.setItem('user', JSON.stringify({ name, email }));
-  
-        console.log("Requesting OTP with email:", email);  
-  
-        // Now request OTP
-        const otpResponse = await axios.post(
-          'https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/otp/generate-otp',
-          { email, name }
-        );
-  
-        console.log("OTP Response:", otpResponse.data);  // Log OTP response
-  
-        navigation.navigate('Otp', { email, name });
-
+      if (otpResponse.status === 200) {
+        navigation.navigate('Otp', { email, name, userData: { name, email, password, number, birthday, address } });
         console.log("Navigating to OTP screen with email:", email);
       } else {
-     
+        Alert.alert('Error', 'Failed to generate OTP. Please try again.');
       }
     } catch (error) {
       console.error("Error:", error);
       const errorMessage = error.response?.data?.error || error.message || 'Something went wrong';
-
+      Alert.alert('Error', errorMessage);
     }
   };
   

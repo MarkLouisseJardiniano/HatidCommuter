@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, FlatList,Alert, Text, StyleSheet, KeyboardAvoidingView, Platform  } from 'react-native';
+import { View, TextInput, Button, FlatList,Alert, Text, StyleSheet, KeyboardAvoidingView, Platform, Image  } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from "axios";
 import { Ionicons } from '@expo/vector-icons';
+import imagePath from "../../constants/imagePath";
 
 const Message = ({ route, navigation }) => {
   const [senderId, setSenderId] = useState('');
@@ -14,19 +15,17 @@ const Message = ({ route, navigation }) => {
   useEffect(() => {
     const initializeIds = async () => {
       try {
-        // Retrieve logged-in user ID from AsyncStorage
         const loggedInUserId = await AsyncStorage.getItem('userId');
         if (loggedInUserId) {
           setSenderId(loggedInUserId);
-          console.log("Sender ID from AsyncStorage:", loggedInUserId); // Debug log
+          console.log("Sender ID from AsyncStorage:", loggedInUserId);
         } else {
           console.warn('User ID not found in AsyncStorage.');
         }
-  
-        // Ensure driverId is passed from route.params
+
         if (driverId) {
           setRecepientId(driverId);
-          console.log('Driver ID from params:', driverId); // Debug log
+          console.log('Driver ID from params:', driverId); 
         } else {
    
           console.error('Driver ID is missing in route params.');
@@ -42,39 +41,33 @@ const Message = ({ route, navigation }) => {
   const handleSendMessage = async () => {
     if (!senderId || !recepientId || !message) {
 
-      console.error("Missing Sender ID:", senderId, "Recipient ID:", recepientId, "Message:", message); // Debug log
+      console.error("Missing Sender ID:", senderId, "Recipient ID:", recepientId, "Message:", message); 
       return;
     }
   
     try {
-      const response = await axios.post('https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/message/send-messages', {
+      const response = await axios.post('https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/message/send-messages', {
         senderId,
         recepientId,
         message,
       });
-  
-      console.log("Response from sending message:", response.data); // Debug log
-  
+      console.log("Response from sending message:", response.data);
       if (response.data.message === 'Message sent successfully') {
-       
-        setMessage('');  // Clear message input
+        setMessage(''); 
         fetchMessages();  
       } else {
-   
       }
     } catch (error) {
       console.error("Error sending message:", error);
-   
     }
   };
   
-  // Function to fetch messages
   const fetchMessages = async () => {
-    if (!senderId || !recepientId) return;  // Ensure both IDs are available
+    if (!senderId || !recepientId) return;
 
     try {
-      const response = await axios.get(`https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/message/messages/${senderId}/${recepientId}`);
-      setMessages(response.data);  // Store messages in state
+      const response = await axios.get(`https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/message/messages/${senderId}/${recepientId}`);
+      setMessages(response.data);
     } catch (error) {
       console.error("Error fetching messages:", error);
 
@@ -83,17 +76,13 @@ const Message = ({ route, navigation }) => {
 
   useEffect(() => {
     if (senderId && recepientId) {
-      fetchMessages();  // Fetch messages initially
-
-      // Set an interval to fetch messages every 3 seconds
+      fetchMessages();
       const intervalId = setInterval(() => {
         fetchMessages();
-      }, 3000);
-
-      // Cleanup interval on component unmount or when senderId/recepientId change
+      }, 2000);
       return () => clearInterval(intervalId);
     }
-  }, [senderId, recepientId]);  // Re-run when IDs change
+  }, [senderId, recepientId]);  
 
   return (
     <KeyboardAvoidingView
@@ -102,13 +91,12 @@ const Message = ({ route, navigation }) => {
     keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 100} 
   >
   <View style={{ flex: 1, justifyContent: 'space-between', padding: 20 }}>
-    {/* FlatList for displaying messages */}
     <FlatList
       data={messages}
       keyExtractor={(item) => item._id.toString()}
       renderItem={({ item }) => {
         const isSender = item.senderId._id === senderId;
-        const isRecipient = item.recepientId === senderId;
+        const isRecipient = item.recepientId._id === senderId;
 
         return (
           <View
@@ -117,7 +105,7 @@ const Message = ({ route, navigation }) => {
               isSender ? styles.sentMessage : styles.receivedMessage
             ]}
           >
-            {/* Sender's message (Your message) */}
+      
             {isSender && (
               <>
                 <Text
@@ -150,6 +138,7 @@ const Message = ({ route, navigation }) => {
                 >
                   {item.message}
                 </Text>
+               
               </>
             )}
           </View>
@@ -158,7 +147,7 @@ const Message = ({ route, navigation }) => {
     />
 
     {/* Message input section at the bottom */}
-    <View style={{flexDirection: "row", paddingHorizontal: 20, width: "90%"}}>
+    <View style={{flexDirection: "row", padding: 20, width: "90%"}}>
 
       <TextInput
         style={{backgroundColor: "lightgray", padding: 10, width: "100%", borderRadius: 10}}

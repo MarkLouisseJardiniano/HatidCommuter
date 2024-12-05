@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { View, TouchableOpacity, Text, StyleSheet, TextInput, Alert } from "react-native";
+import { View, TouchableOpacity, Text, StyleSheet, TextInput, Alert, Image } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from "@react-navigation/native";
 import axios from 'axios';
+import imagePath from "../../constants/imagePath";
 const Login = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState("");
@@ -11,9 +12,9 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       const userData = { email, password };
-      const res = await axios.post('https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/login', userData);
+      const res = await axios.post('https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/login', userData);
   
-      console.log('Login Response:', res.data);  // Log the entire response for debugging
+      console.log('Login Response:', res.data);
   
       if (res.data.status === 'ok') {
         const { token, userId } = res.data.data;
@@ -22,29 +23,53 @@ const Login = () => {
           throw new Error('User ID is missing in the response');
         }
   
-        await AsyncStorage.setItem('KeepLoggedIn', 'true');  // Ensure 'true' is a string
+        await AsyncStorage.setItem('KeepLoggedIn', 'true');
         await AsyncStorage.setItem('token', token);
-        await AsyncStorage.setItem('userId', userId);  // Store user ID
+        await AsyncStorage.setItem('userId', userId);
   
         console.log('Token:', token);
         console.log('User ID:', userId);
+        navigation.replace("TabNav");
   
-        navigation.replace("TabNav");  // Navigate to TabNav screen after successful login
       } else {
         Alert.alert('Login Failed', res.data.message);
       }
+  
     } catch (error) {
-      console.error('Login Error:', error);
-      Alert.alert('Login Failed', 'Failed to login. Please try again.');
+      console.error("Login Error:", error);
+  
+      if (error.response && error.response.data && error.response.data.message) {
+        const message = error.response.data.message;
+  
+        if (message.includes("suspended")) {
+          Alert.alert("Account Suspended", message);
+        } else if (message.includes("Invalid Credentials") || message.includes("Invalid email or password")) {
+          Alert.alert("Login Failed", "Invalid email or password. Please try again.");
+        } else {
+          Alert.alert("Login Failed", message);
+        }
+      } else {
+        Alert.alert("Login Failed", "An error occurred. Please try again.");
+      }
     }
   };
+
+
   const handleBackToSignUp = () => {
     navigation.navigate("Signup");
   }
 
+  const handleForgot = () => {
+    navigation.navigate("Forgot");
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Login</Text>
+        <Image
+            source={imagePath.logo}
+            style={{width: 250, height: 250, alignItems: "center",}}
+            resizeMode="contain"
+          />
       <TextInput
         placeholder="Email"
         value={email}
@@ -58,12 +83,12 @@ const Login = () => {
         secureTextEntry
         style={styles.input}
       />
-      <Text style={styles.forgotPassword}>Forgot Password</Text>
+      <Text style={styles.forgotPassword} onPress={handleForgot}>Forgot Password</Text>
       <TouchableOpacity onPress={handleLogin} style={styles.button}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
-      <Text style={styles.backToSignUp}>Dont have an account? <Text   style={styles.blueText} onPress={handleBackToSignUp}>SignUp</Text></Text>
+      <Text style={styles.backToSignUp}>Dont have an account? <Text   style={styles.blueText} onPress={handleBackToSignUp}>Signup</Text></Text>
     </View>
   );
 };
@@ -90,7 +115,7 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
-    backgroundColor: 'blue',
+    backgroundColor: 'powderblue',
     padding: 15,
     marginTop: 20,
     marginBottom: 10,
@@ -98,11 +123,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   forgotPassword: {
-    marginLeft: 260,
-    marginBottom: 10,
+ alignSelf: 'flex-end'
   },
   buttonText: {
-    color: 'white',
+    color: 'black',
     fontWeight: 'bold',
     fontSize: 18,
   },

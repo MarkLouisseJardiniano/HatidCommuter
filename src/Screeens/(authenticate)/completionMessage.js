@@ -36,8 +36,8 @@ const CompletionMessage = () => {
       Congratulations, your account has been created.
       </Text>
 <View style={{  width: "100%", padding: 40}}>
-<TouchableOpacity onPress={handleContinue} style={{backgroundColor: "black", padding: 10, borderRadius: 10 }}>
-        <Text style={{textAlign: "center", color: "white"}}>Continue</Text>
+<TouchableOpacity onPress={handleContinue} style={{backgroundColor: "powderblue", padding: 10, borderRadius: 10 }}>
+        <Text style={{textAlign: "center", color: "black", fontSize: 18, fontWeight: "bold"}}>Continue</Text>
       </TouchableOpacity>
 </View>
 

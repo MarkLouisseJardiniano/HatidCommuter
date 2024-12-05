@@ -11,7 +11,7 @@ import {
 import ChooseLocation from "../Screeens/RideScreen/ChooseLocation";
 import Home from "../Screeens/RideScreen/index";
 import Report from "../Screeens/RideScreen/report";
-
+import Cancelled from "../Screeens/RideScreen/cancelled";
 
 export default function Layout() {
   const Stack = createStackNavigator();
@@ -20,7 +20,7 @@ export default function Layout() {
     <>
     <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
     <Stack.Navigator screenOptions={{
-      headerShown: false, // Hide header for all screens in this stack
+      headerShown: false, 
     }}>
       <Stack.Screen name="home" component={Home} />
       <Stack.Screen name="chooseLocation" component={ChooseLocation} />
@@ -38,12 +38,13 @@ export default function Layout() {
     ),
     headerStyle: { backgroundColor: 'red', height: 120, }, 
     headerTitleContainerStyle: {
-      height: '100%', // Ensures the title remains aligned at the top of the header
-      justifyContent: 'center', // Centers the title vertically
+      height: '100%', 
+      justifyContent: 'center',
     },
     headerTintColor: '#fff',
   }}
 />
+
 
     </Stack.Navigator>
     </>

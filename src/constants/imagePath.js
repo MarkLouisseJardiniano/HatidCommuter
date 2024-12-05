@@ -7,4 +7,13 @@ export default {
     starFilled: require("../../assets/images/starFilled.png"),
     verification: require("../../assets/images/verification.jpg"),
     check: require("../../assets/images/check.jpg"),
+    dingdong: require("../../assets/images/dingdong.jpg"),
+    defaultpic: require("../../assets/images/defaultpic.jpg"),
+penIcon: require("../../assets/images/penIcon.png"),
+greenCheckIcon: require("../../assets/images/greenCheckIcon.png"),
+redCautionIcon: require("../../assets/images/redCautionIcon.png"),
+xcircle: require("../../assets/images/xcircle.png"),
+bluePin: require("../../assets/images/bluePin.jpg"),
+logo: require('../../assets/images/logo.png'),
+rating: require('../../assets/images/rating.png'),
 }

@@ -1,72 +1,89 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Location from "expo-location"; // Import Expo location
-
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  Image
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
+import axios from "axios";
+import imagePath from "../../constants/imagePath";
 const Home = () => {
-  const navigation = useNavigation();
-  const [currentAddress, setCurrentAddress] = useState(null);
+  const [currentAddress, setCurrentAddress] = useState("Fetching address...");
+  const [locationPermission, setLocationPermission] = useState(false);
 
-  // Function to fetch current address
-  const getCurrentAddress = async () => {
-    try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+  useEffect(() => {
+    const fetchLocation = async () => {
+      // Request location permission
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setCurrentAddress("Permission to access location was denied");
+        setCurrentAddress("Permission to access location was denied.");
         return;
       }
+      setLocationPermission(true);
 
-      let location = await Location.getCurrentPositionAsync({});
-      let { coords } = location;
-      let address = await Location.reverseGeocodeAsync({ latitude: coords.latitude, longitude: coords.longitude });
-      
-      // Construct the address string from the address object
-      let fullAddress = `${address[0].street}, ${address[0].village}, ${address[0].city}`;
+      try {
+        const location = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = location.coords;
+        const address = await getAddress(latitude, longitude);
+        setCurrentAddress(address);
+      } catch (error) {
+        console.error("Error fetching location:", error);
+        setCurrentAddress("Error fetching location.");
+      }
+    };
 
-      setCurrentAddress(fullAddress);
+    fetchLocation();
+  }, []);
+
+  const getAddress = async (latitude, longitude) => {
+    try {
+      const reverseGeocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=pk.eyJ1IjoibWF3aTIxIiwiYSI6ImNseWd6ZGp3aTA1N2IyanM5Ymp4eTdvdzYifQ.0mYPMifHNHONTvY6mBbkvg`;
+      const geoResponse = await axios.get(reverseGeocodeUrl);
+
+      if (geoResponse.data.features.length > 0) {
+        const addressComponents = geoResponse.data.features[0].context;
+
+        let barangay = "";
+        let district = "";
+        
+
+        addressComponents.forEach((component) => {
+          if (component.id.includes("locality")) {
+            barangay = component.text;
+          } else if (component.id.includes("place")) {
+            district = component.text;
+          }
+        });
+
+        return `${barangay}, ${district}` || "Address not found";
+      }
+      return "Address not found";
     } catch (error) {
-      console.error("Error getting location:", error);
-      setCurrentAddress("Location unavailable");
+      console.error("Error fetching address:", error);
+      return "Error fetching address.";
     }
   };
 
-  useEffect(() => {
-    getCurrentAddress(); // Fetch address when component mounts
-  }, []);
-
-  const handleRental = () => {
-    navigation.navigate("Rental");
-  };
-  
-
-
-
-  
   return (
     <SafeAreaView style={styles.safeContainer}>
       <View style={styles.rowContainer}>
         <View style={styles.fullWidthBox}>
-          <Text style={styles.header}>HATID</Text>
+        <Image
+            source={imagePath.logo}
+            style={{width: 150, height: 150}}
+            resizeMode="contain"
+          />
         </View>
 
         <View>
           <View style={styles.currentLoc}>
-            <Text>{currentAddress}</Text>
+            <Text style={{fontSize:16}}>{currentAddress}</Text>
           </View>
         </View>
-
-        <TouchableOpacity onPress={handleRental}>
-          <View style={styles.circle}>
-            <Ionicons name="car" size={50} color="black" />
-          </View>
-        </TouchableOpacity>
-
-        <View>
-          <Text style={styles.rent}>Rent a Car</Text>
-        </View>
-
       </View>
     </SafeAreaView>
   );
@@ -75,11 +92,7 @@ const Home = () => {
 const styles = StyleSheet.create({
   safeContainer: {
     flex: 1,
-  },
-  try: {
-    width:100,
-    height:30,
-    backgroundColor: 'blue',
+    backgroundColor:"white"
   },
   rowContainer: {
     flex: 1,
@@ -97,22 +110,6 @@ const styles = StyleSheet.create({
     fontSize: 42,
     fontWeight: "700",
     fontFamily: "sans-serif",
-  },
-  circle: {
-    width: 70,
-    height: 70,
-    backgroundColor: "powderblue",
-    borderRadius: 50,
-    marginLeft: 30,
-    marginTop: 30,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  rent: {
-    marginLeft: 25,
-    marginTop: 10,
-    fontSize: 18,
-    fontWeight: "700",
   },
   currentLoc: {
     margin: 20,

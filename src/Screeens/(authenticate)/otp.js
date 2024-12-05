@@ -3,9 +3,9 @@ import { View,Text, TextInput, Alert,Image } from 'react-native';
 import axios from 'axios';
 import imagePath from "../../constants/imagePath";
 import { TouchableOpacity } from "react-native-gesture-handler";
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const OtpVerificationScreen = ({ route, navigation }) => {
-  const { email } = route.params; // Getting email from previous screen
+  const { email } = route.params;
   const [otp, setOtp] = useState('');
   const [isDisabled, setIsDisabled] = useState(false);
   const [timer, setTimer] = useState(0);
@@ -13,18 +13,43 @@ const OtpVerificationScreen = ({ route, navigation }) => {
 
   const handleVerifyOtp = async () => {
     try {
-      // Send OTP verification request to the backend
+      console.log("Verifying OTP for email:", email);
+  
       const response = await axios.post(
-        'https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/otp/verify-otp',
+        'https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/otp/verify-otp',
         { email, otp }
       );
-
-      navigation.navigate('CompletionMessage'); 
-
+  
+      if (response.status === 200) {
+        console.log("OTP Verified. Proceeding with signup.");
+  
+        const { userData } = route.params;
+        if (!userData) {
+          Alert.alert('Error', 'User data is missing. Please try again.');
+          return;
+        }
+  
+        const { name, email, password, number, birthday, address } = userData;
+        const signupResponse = await axios.post(
+          'https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/signup',
+          { name, email, password, number, birthday, address }
+        );
+  
+        if (signupResponse.data.message === 'User created successfully') {
+          await AsyncStorage.setItem('user', JSON.stringify({ name, email }));
+          navigation.navigate('CompletionMessage');
+        } else {
+          Alert.alert('Error', signupResponse.data.message || 'Signup failed.');
+        }
+      } else {
+        Alert.alert('Error', 'Invalid OTP. Please try again.');
+      }
     } catch (error) {
-    
+      const errorMessage = error.response?.data?.error || error.message || 'An error occurred. Please try again.';
+      Alert.alert('Error', errorMessage);
     }
   };
+  
 
   
   const handleResendOtp = async () => {
@@ -36,7 +61,7 @@ const OtpVerificationScreen = ({ route, navigation }) => {
     try {
       // Send OTP request
       const response = await axios.post(
-        'https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/otp/generate-otp',
+        'https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/otp/generate-otp',
         { email }
       );
 

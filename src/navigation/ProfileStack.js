@@ -10,8 +10,9 @@ import AddContact from '../Screeens/ProfileScreen/addContact';
 import AddWork from '../Screeens/ProfileScreen/addSavedPlaceWork';
 import AddHome from '../Screeens/ProfileScreen/addSavedPlaceHome';
 import AddNew from '../Screeens/ProfileScreen/addSavedPlaceNew';
+import AddNewSavedPlaceForm from '../Screeens/ProfileScreen/addNewSavedPlaceForm';
 import Map from "../Screeens/ProfileScreen/map"
-
+import ChangeEmailVerification from '../Screeens/ProfileScreen/changeEmailVerification';
 
 
 const Stack = createStackNavigator();
@@ -22,6 +23,7 @@ export default function Layout() {
     <Stack.Navigator>
       <Stack.Screen name="Profile" component={Profile}  options={{ headerShown: false }}/>
       <Stack.Screen name="EditProfile" component={EditProfile} />
+      <Stack.Screen name="ChangeEmailVerification" component={ChangeEmailVerification} />
       <Stack.Screen name="SavedPlaces" component={SavedPlaces} />
       <Stack.Screen
         name="AddWork"
@@ -37,6 +39,11 @@ export default function Layout() {
         name="AddNew"
         component={AddNew}
         options={{ title: 'Add New', headerStyle: { backgroundColor: '#32cd32' }, headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold' } }}
+      />
+        <Stack.Screen
+        name="AddNewSavedPlaceForm"
+        component={AddNewSavedPlaceForm}
+        options={{ title: 'AddNewSavedPlaceForm', headerStyle: { backgroundColor: '#32cd32' }, headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold' } }}
       />
       <Stack.Screen name="Map" component={Map} />
       <Stack.Screen name="Contact" component={Contact} />

@@ -1,15 +1,28 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from "@react-navigation/native";
+import imagePath from '../../constants/imagePath';
 
 const Profile = () => {
   const navigation = useNavigation();
   const [userData, setUserData] = useState(null);
-
-  const HandleLogOut = () => {
-    Alert.alert("Button Pressed", "You clicked the button!");
+  const [email,setEmail] = useState("")
+  const [profilePic, setProfilePic] = useState("");
+  const handleLogout = async () => {
+    try {
+      // Remove items from AsyncStorage
+      await AsyncStorage.removeItem('KeepLoggedIn');
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('userId');
+  
+      console.log('Logged out successfully');
+      navigation.navigate('LoginStack'); 
+    } catch (error) {
+      console.error('Error during logout:', error);
+      Alert.alert('Logout Failed', 'Failed to log out. Please try again.');
+    }
   };
 
   const handleEdit = () => {
@@ -24,13 +37,17 @@ const Profile = () => {
     navigation.navigate("Contact");
   };
 
-  useEffect(() => {
+
     const fetchData = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        const res = await axios.post('https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/userdata', { token });
+        const res = await axios.post('https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/userdata', { token });
         if (res.data.status === 'ok') {
           setUserData(res.data.data);
+          setEmail(res.data.data.email)
+          setProfilePic(res.data.data.profilePic);
+
+          console.log(userData)
         } else {
           console.error('Failed to fetch user data');
         }
@@ -38,72 +55,95 @@ const Profile = () => {
         console.error('Error fetching user data:', error);
       }
     };
-    fetchData();
+    useEffect(() => {
+    fetchData(); 
+    const intervalId = setInterval(fetchData, 5000); 
+    return () => clearInterval(intervalId);
   }, []);
 
   return (
-    <View style={styles.rowContainer}>
-      <View style={styles.fullWidthBox}>
-        <View style={styles.circle} />
-        {userData ? (
-          <View>
-            <Text style={styles.userName}> {userData.name}</Text>
-          </View>
-        ) : (
-          <Text>Loading...</Text>
-        )}
+<View style={styles.rowContainer}>
+  <View style={styles.fullWidthBox}>
+    {userData && userData.profilePic ? (
+      <Image
+        source={{ uri: userData.profilePic }}
+        style={styles.profileImage}
+        resizeMode="cover"
+      />
+    ) : (
+      <Image
+        source={imagePath.defaultpic}
+        style={styles.defaultImage}
+        resizeMode="contain"
+      />
+    )}
+    {userData ? (
+      <View>
+        <Text style={styles.userName}>{userData.name}</Text>
       </View>
+    ) : (
+      <Text>Loading...</Text>
+    )}
+  </View>
 
-      <View style={styles.myProfile}>
-        <Text style={styles.profileTitle}>My Profile</Text>
-      </View>
-      <View style={styles.profileContents}>
-        <TouchableOpacity style={styles.divider} onPress={handleEdit}>
-          <Text style={styles.dividerText}>Edit Profile</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.divider} onPress={handlePlaces}>
-          <Text style={styles.dividerText}>Saved Places</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.divider} onPress={handleContact}>
-          <Text style={styles.dividerText}>Emergency Contact</Text>
-        </TouchableOpacity>
-      </View>
+  <View style={styles.myProfile}>
+    <Text style={styles.profileTitle}>My Profile</Text>
+  </View>
 
-      <View style={styles.buttonPosition}>
-        <TouchableOpacity onPress={HandleLogOut} style={styles.button}>
-          <Text style={styles.buttonText}>Log Out</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+  <View style={styles.profileContents}>
+    <TouchableOpacity style={styles.divider} onPress={handleEdit}>
+      <Text style={styles.dividerText}>Edit Profile</Text>
+    </TouchableOpacity>
+    <TouchableOpacity style={styles.divider} onPress={handlePlaces}>
+      <Text style={styles.dividerText}>Saved Places</Text>
+    </TouchableOpacity>
+    <TouchableOpacity style={styles.divider} onPress={handleContact}>
+      <Text style={styles.dividerText}>Emergency Contact</Text>
+    </TouchableOpacity>
+  </View>
+
+  <View style={{ flex: 1 }} /> 
+
+  <View style={styles.buttonPosition}>
+    <TouchableOpacity onPress={handleLogout} style={styles.button}>
+      <Text style={styles.buttonText}>Log Out</Text>
+    </TouchableOpacity>
+  </View>
+</View>
+
   );
 };
 
 const styles = StyleSheet.create({
+  profileImage: {
+    height: 80,
+    width: 80,
+    borderRadius: 50,
+    
+  },
+  defaultImage: {
+    height: 100,
+    width: 100,
+    borderRadius: 50,
+    borderWidth: 0.2,
+    borderColor: 'black',
+  },
   rowContainer: {
     flex: 1,
     backgroundColor: 'white', 
   },
   fullWidthBox: {
-    height: 150,
+    paddingTop: 60,
+    paddingBottom: 20,
     flexDirection: "row",
     backgroundColor: "lightblue",
     alignItems: "center",
     gap: 20,
+    paddingHorizontal: 40,
   },
   userName: {
-    marginTop: 30,
     fontWeight: '700',
-    fontSize: 24,
-  },
-  circle: {
-    width: 60,
-    height: 60,
-    backgroundColor: "gray",
-    borderRadius: 30, // Ensure the circle is properly rounded
-    marginLeft: 30,
-    marginTop: 30,
-    justifyContent: "center",
-    alignItems: "center",
+    fontSize: 20,
   },
   divider: {
     borderBottomColor: '#f3f3f3',
@@ -111,22 +151,21 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   myProfile: {
-    marginLeft: 40,
-    marginTop: 40,
+  paddingTop:40,
+  paddingLeft: 40
   },
   profileTitle: {
     fontSize: 24,
   },
   profileContents: {
-    marginTop: 20,
-    marginBottom: 20, // Adjusted for better layout
+
   },
   dividerText: {
     fontSize: 16,
     marginLeft: 60,
   },
   buttonPosition: {
-    marginTop: 300,
+    paddingBottom: 40,
     alignItems: "center",
     justifyContent: "center",
   },

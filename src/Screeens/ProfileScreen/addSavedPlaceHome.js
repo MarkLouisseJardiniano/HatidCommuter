@@ -95,25 +95,54 @@ const AddSavedPlaceHome = ({ route }) => {
     return true;
   };
 
+  const MARINDUQUE_BOUNDS = {
+    latitudeMin: 12.8066,
+    latitudeMax: 13.5595,
+    longitudeMin: 121.8020,
+    longitudeMax: 122.0708,
+  };
+  
+  const isLocationInMarinduque = (location) => {
+    const { latitude, longitude } = location;
+  
+    return (
+      latitude >= MARINDUQUE_BOUNDS.latitudeMin &&
+      latitude <= MARINDUQUE_BOUNDS.latitudeMax &&
+      longitude >= MARINDUQUE_BOUNDS.longitudeMin &&
+      longitude <= MARINDUQUE_BOUNDS.longitudeMax
+    );
+  };
+  
   const onSave = async () => {
     const isValid = checkValid();
     if (isValid) {
+      // Check if the selected location is within Marinduque
+      if (!isLocationInMarinduque(selectedLocation)) {
+        // Show alert if the location is outside Marinduque
+        Alert.alert(
+          "Invalid Location",
+          "The selected location is outside Marinduque. Please choose a location within the island.",
+          [{ text: "OK" }]
+        );
+        return;
+      }
+  
       console.log("Saving place with userId:", userId);
       console.log("Selected Location:", selectedLocation);
       try {
         const response = await axios.post(
-          "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/saved/saved-place",
+          "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/saved/saved-place",
           {
             userId,
             placeType: "Home",
             savedLocation: {
-              latitude: selectedLocation.latitude, // Use selectedLocation for saving
+              latitude: selectedLocation.latitude, 
               longitude: selectedLocation.longitude,
             },
           }
         );
         console.log("Saved place response:", response.data);
-        navigation.navigate("SavedPlaces"); // Navigate to home screen or wherever you need to go
+        navigation.navigate("SavedPlaces");
       } catch (error) {
         console.error("Error saving place:", error);
         showError("Failed to save place");
@@ -187,7 +216,6 @@ const AddSavedPlaceHome = ({ route }) => {
         />
       </View>
 
-      {/* Save Button */}
       <View style={styles.saveButtonContainer}>
         <CustomBtn
           btnText="Save Home"
